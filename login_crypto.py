@@ -1,7 +1,6 @@
 from cryptography.fernet import Fernet
 from flask import Flask, render_template, url_for, request, session, redirect
 from flask_pymongo import PyMongo
-import bcrypt
 from pymongo import MongoClient
 import json
 
