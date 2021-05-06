@@ -1,3 +1,4 @@
+from cryptography.fernet import Fernet
 from flask import Flask, render_template, url_for, request, session, redirect
 from flask_pymongo import PyMongo
 import bcrypt
@@ -11,6 +12,35 @@ app.config['MONGO_URI'] = 'mongodb+srv://dbadmin:adminuser@logindetails.qx1k3.mo
 
 mongo = PyMongo(app)
 
+def generate_key():
+    key = Fernet.generate_key()
+    with open("secret.key","wb") as key_file:
+        key_file.write(key)
+        print("Key is generated")
+
+def load_key():
+    return open("secret.key","rb").read()
+
+def encrypt_message(message):
+    key = load_key()
+    encoded_msg = message.encode()
+    f = Fernet(key)
+    encrypted_msg = f.encrypt(encoded_msg)
+    return encrypted_msg
+
+# print(encrypt_message("Hello world"))
+
+def decrypt_message(enc_msg):
+    key = load_key()
+    f = Fernet(key)
+    dec_msg = f.decrypt(enc_msg)
+    return dec_msg.decode()
+
+# enc = encrypt_message('hello')
+# print(enc)
+# dec = decrypt_message(enc)
+# print(dec)
+
 @app.route('/')
 def index():
     if 'username' in session:
@@ -23,9 +53,16 @@ def index():
 def login():
     users = mongo.db.users
     login_user = users.find_one({'name' : request.form['username']})
+    # hashpass = encrypt_message(users.find_one({'pass' : request.form['pass']}))
+    Passkey = 'passs' 
+    dec_passkey = 'Example'
+    if login_user['password'] is not None:
+        Passkey = login_user['password'] 
+        dec_passkey = decrypt_message(Passkey) 
+        print(Passkey,' ',dec_passkey)
 
     if login_user:
-        if bcrypt.hashpw(request.form['pass'].encode('utf-8'), login_user['password']) == login_user['password']:
+        if dec_passkey == request.form['pass']:
             session['username'] = request.form['username']
             return redirect(url_for('index'))
 
@@ -44,8 +81,12 @@ def register():
         existing_user = users.find_one({'name' : request.form['username']})
 
         if existing_user is None:
-            hashpass = bcrypt.hashpw(request.form['pass'].encode('utf-8'), bcrypt.gensalt())
-            users.insert({'name' : request.form['username'], 'password' : hashpass})
+            key = load_key()
+            # encoded_msg = message.encode()
+            f = Fernet(key)
+            # encrypted_msg = f.encrypt(encoded_msg)
+            hashpass = f.encrypt(request.form['pass'].encode('utf-8'))
+            users.insert({'name' : request.form['username'], 'password' : hashpass, 'key': key})
             session['username'] = request.form['username']
             return redirect(url_for('index'))
         
