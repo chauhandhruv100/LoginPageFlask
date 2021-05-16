@@ -79,6 +79,7 @@ def register():
         existing_user = users.find_one({'name' : request.form['username']})
 
         if existing_user is None:
+            generate_key()
             key = load_key()
             # encoded_msg = message.encode()
             f = Fernet(key)
