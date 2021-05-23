@@ -52,11 +52,11 @@ def login():
     users = mongo.db.users
     login_user = users.find_one({'name' : request.form['username']})
     # hashpass = encrypt_message(users.find_one({'pass' : request.form['pass']}))
-    Passkey = '' 
+    Passkey = ''
     dec_passkey = ''
     if login_user['password'] is not None:
-        Passkey = login_user['password'] 
-        dec_passkey = decrypt_message(Passkey) 
+        Passkey = login_user['password']
+        dec_passkey = decrypt_message(Passkey)
         print(Passkey,' ',dec_passkey)
 
     if login_user:
